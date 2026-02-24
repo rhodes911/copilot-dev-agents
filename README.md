@@ -30,38 +30,52 @@ User Request
 
 ## Quick Start
 
-### 1. Add to your project
-
-Copy the contents of this repository into the root of your project:
-
-```
-.github/
-  agents/
-    discovery.agent.md
-    planner.agent.md
-    build.agent.md
-    review.agent.md
-  instructions/
-    documentation.instructions.md
-    testing.instructions.md
-  copilot-instructions.md
-docs/
-  epics/
-    INDEX.md
-  tickets/
-    INDEX.md
-  templates/
-    EPIC-STATUS-TEMPLATE.md
-    TICKET-STATUS-TEMPLATE.md
-    DEV-PLAN-TEMPLATE.md
-```
-
-### 2. Requirements
+### Requirements
 
 - VS Code with the **GitHub Copilot** extension (Agent Mode enabled)
-- The `.github/agents/` directory must be at the repository root
+- Git
 
-### 3. Use the agents
+### 1. Add as a submodule (recommended)
+
+Adding as a submodule means your repository tracks a specific commit of the agent system and can pull updates whenever you choose.
+
+```bash
+# From the root of your project
+git submodule add https://github.com/rhodes911/copilot-dev-agents .copilot-dev-agents
+git submodule update --init
+```
+
+### 2. Run the sync script
+
+The sync script copies the agent files into the correct locations in your repo and injects the agent-system rules into your `copilot-instructions.md`.
+
+```powershell
+# Windows (PowerShell)
+.\.copilot-dev-agents\sync-agents.ps1
+```
+
+```bash
+# macOS / Linux
+bash .copilot-dev-agents/sync-agents.sh
+```
+
+What the script does:
+- Copies `.github/agents/*.agent.md` → your repo's `.github/agents/`
+- Copies `.github/instructions/*.instructions.md` → your `.github/instructions/`
+- Copies `docs/templates/` → your `docs/templates/` (always latest)
+- Creates `docs/epics/INDEX.md` and `docs/tickets/INDEX.md` if absent
+- Injects/updates an `<!-- AGENT-SYSTEM:START -->` … `<!-- AGENT-SYSTEM:END -->` block in your `.github/copilot-instructions.md`
+
+### 3. Commit the synced files
+
+```bash
+git add .github/agents .github/instructions .github/copilot-instructions.md \
+        docs/templates docs/epics/INDEX.md docs/tickets/INDEX.md \
+        .gitmodules .copilot-dev-agents
+git commit -m "chore: add copilot-dev-agents submodule and sync files"
+```
+
+### 4. Use the agents
 
 1. Open **Copilot Chat** in VS Code
 2. Click the **Agent** dropdown (or type `@` in the chat input)
@@ -70,6 +84,28 @@ docs/
 5. For all other agents: include the ticket number (e.g. `ticket=TICKET-00001`)
 
 > Tip: Attach the active ticket folder (`docs/tickets/TICKET-XXXXX/`) to the chat context before invoking Planner, Build, or Review.
+
+---
+
+## Updating to a Newer Version
+
+When this repo publishes updates, pull them into your project:
+
+```bash
+# Pull the latest agent system
+git submodule update --remote .copilot-dev-agents
+
+# Re-run the sync to apply changes to your .github/ and docs/
+.\.copilot-dev-agents\sync-agents.ps1   # Windows
+# or
+bash .copilot-dev-agents/sync-agents.sh # macOS / Linux
+
+# Commit the update
+git add .copilot-dev-agents .github docs
+git commit -m "chore: update copilot-dev-agents to latest"
+```
+
+The `<!-- AGENT-SYSTEM:START -->` / `<!-- AGENT-SYSTEM:END -->` markers in your `copilot-instructions.md` ensure the update is surgical — only the agent-system block is replaced, leaving your own project-specific instructions untouched.
 
 ---
 
@@ -135,23 +171,26 @@ Add a `.env.example` to your repository to enable env var tracking across agents
 
 ## Customising for Your Project
 
-The agents are written in plain Markdown and are designed to be forked and extended. Common customisations:
+The sync script always overwrites the agent files and templates with the canonical upstream versions. Project-specific customisations belong in two places that the sync script **never touches**:
 
-| What to change | Where |
-|----------------|-------|
-| Investigation scope for Discovery | `.github/agents/discovery.agent.md` → Investigation Scope section |
-| Review checklist | `.github/agents/review.agent.md` → Review Checklist section |
-| Documentation requirements | `.github/instructions/documentation.instructions.md` |
-| Testing conventions | `.github/instructions/testing.instructions.md` |
-| Global evidence-based rules | `.github/copilot-instructions.md` |
+| Customisation | Where to put it |
+|---------------|-----------------|
+| Project-specific global rules | In `copilot-instructions.md`, **outside** the `AGENT-SYSTEM` markers |
+| Extra investigation scope for Discovery | Add a `project-discovery.instructions.md` in `.github/instructions/` |
+| Additional review checklist items | Add a `project-review.instructions.md` in `.github/instructions/` |
+| Testing conventions specific to your stack | Add a `project-testing.instructions.md` in `.github/instructions/` |
+
+The scoped instruction files in `.github/instructions/` are additive — Copilot merges them all. Add your own files alongside the synced ones without worrying about conflicts.
+
+If you need to change the upstream agent behaviour permanently, open a PR against this repo so all consumers benefit.
 
 ---
 
 ## Troubleshooting
 
 **Agent not appearing in the dropdown**
-- Ensure the file is in `.github/agents/` at the repository root
-- Ensure the file has a valid `chatagent` front-matter block with a `name` field
+- Ensure the sync has been run and the files exist at `.github/agents/` in your repo root
+- Ensure each file has a valid `chatagent` front-matter block with a `name` field
 - Reload VS Code
 
 **Agent ignores my ticket context**
@@ -160,4 +199,9 @@ The agents are written in plain Markdown and are designed to be forked and exten
 
 **Planner or Build is making assumptions**
 - This is a misuse signal. Remind the agent: "Read the file before answering."
-- The global instructions in `.github/copilot-instructions.md` enforce evidence-based behaviour — ensure no conflicting instructions exist in your project
+- Ensure the `<!-- AGENT-SYSTEM:START -->` block is present in `.github/copilot-instructions.md` — re-run the sync script if not.
+
+**Sync script fails or produces unexpected output**
+- Confirm the submodule is initialised: `git submodule update --init`
+- On macOS/Linux, ensure `perl` is available (used for multi-line replacement)
+- Run with `-Verbose` (PowerShell) or `bash -x` (shell) for debug output
