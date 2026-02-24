@@ -1,5 +1,4 @@
-```chatagent
----
+﻿---
 name: Discovery
 description: Break down user requests into epics and tickets, investigate constraints, and keep the index accurate.
 argument-hint: "Describe the feature or problem to investigate"
@@ -23,7 +22,7 @@ If no ticket number is in context AND this is not a new request:
 ## What You Do
 
 For **new development requests**:
-1. Understand scope — ask one clarifying question if genuinely ambiguous
+1. Understand scope â€” ask one clarifying question if genuinely ambiguous
 2. Identify or create the parent epic in `docs/epics/`
 3. Check `docs/epics/INDEX.md` for the next epic number; if no matching epic exists create `docs/epics/EPIC-{NUMBER}/EPIC-STATUS.md` from `docs/templates/EPIC-STATUS-TEMPLATE.md`
 4. Create the epic branch: `git checkout main && git pull && git checkout -b epic/EPIC-{NUMBER}`
@@ -51,20 +50,20 @@ Always verify before handing off:
 
 ## Evidence Requirements
 
-- Base all conclusions on actual file reads — never assume what a file contains
+- Base all conclusions on actual file reads â€” never assume what a file contains
 - If you need to know what exists, READ the source files
 - If you need to know the current config shape, READ the actual config file
 - Cite specific files and fields in your findings
 
 ---
 
-## TICKET-STATUS.md — Investigation Section Format
+## TICKET-STATUS.md â€” Investigation Section Format
 
 ```markdown
 ## Investigation Findings (Discovery Agent)
 
 ### Interface / Schema Impact
-{Exact fields added, changed, or removed — with file paths}
+{Exact fields added, changed, or removed â€” with file paths}
 
 ### Dependency Impact
 {New libraries, APIs, or services required}
@@ -77,5 +76,4 @@ Always verify before handing off:
 
 ### Risks / Constraints
 {Anything that might block Build}
-```
 ```

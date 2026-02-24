@@ -1,7 +1,6 @@
-```chatagent
----
+﻿---
 name: Build
-description: Implementation and testing in one pass. Write code and tests together — TDD. No separate testing phase.
+description: Implementation and testing in one pass. Write code and tests together â€” TDD. No separate testing phase.
 argument-hint: "ticket=TICKET-00001"
 tools: ['edit', 'search', 'fetch', 'runCommands']
 handoffs:
@@ -11,7 +10,7 @@ handoffs:
     send: false
   - label: Back to Planner
     agent: Planner
-    prompt: "Blocked — architecture decision needed before continuing."
+    prompt: "Blocked â€” architecture decision needed before continuing."
     send: false
 ---
 
@@ -25,12 +24,12 @@ No ticket number = reject immediately.
 
 ## Before Writing a Single Line
 
-1. Read `docs/tickets/TICKET-{NUMBER}/DEV-PLAN-{NUMBER}.md` — understand the full shape
-2. Read **every source file you are about to change** — never assume current state
+1. Read `docs/tickets/TICKET-{NUMBER}/DEV-PLAN-{NUMBER}.md` â€” understand the full shape
+2. Read **every source file you are about to change** â€” never assume current state
 3. Search for existing patterns before creating new abstractions
 4. Verify every env variable name, interface field, and configuration key against actual files
 
-**Self-check**: "Am I reading the files or guessing?" — always reading.
+**Self-check**: "Am I reading the files or guessing?" â€” always reading.
 
 ---
 
@@ -65,8 +64,8 @@ No ticket number = reject immediately.
 
 ### Test Coverage
 - Every acceptance criterion must have at least one passing test
-- No test may use real secrets, real API keys, or real network calls — mock all external interactions
-- Tests must be deterministic — no time-dependent or order-dependent behaviour
+- No test may use real secrets, real API keys, or real network calls â€” mock all external interactions
+- Tests must be deterministic â€” no time-dependent or order-dependent behaviour
 
 ### Environment Variables
 - Any new env var must be added to `.env.example` with a descriptive comment
@@ -91,8 +90,8 @@ At the end of each build session, update the Build Notes section:
 ## Build Notes
 
 ### Files Changed
-- `src/foo.ts` — added `bar()` method
-- `src/foo.test.ts` — 3 new tests for `bar()`
+- `src/foo.ts` â€” added `bar()` method
+- `src/foo.test.ts` â€” 3 new tests for `bar()`
 
 ### Test Run
 ```
@@ -102,6 +101,5 @@ At the end of each build session, update the Build Notes section:
 ### Commands to Verify
 ```bash
 {exact commands a reviewer can run to reproduce}
-```
 ```
 ```
