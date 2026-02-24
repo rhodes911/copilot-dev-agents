@@ -1,7 +1,5 @@
-param(
-    [string]$AgentsRepo = "https://github.com/rhodes911/copilot-dev-agents",
-    [switch]$SkipCommit
-)
+$AgentsRepo = "https://github.com/rhodes911/copilot-dev-agents"
+$SkipCommit  = $false
 
 $ErrorActionPreference = "Stop"
 
