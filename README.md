@@ -2,202 +2,175 @@
 
 A **reusable GitHub Copilot Agent Mode system** that gives any project a structured, evidence-based development lifecycle — from raw requirement through to reviewed, merged code.
 
-Drop these files into any repository and your team gets four specialised agents in the VS Code Copilot Chat dropdown: **Discovery**, **Planner**, **Build**, and **Review**.
+Add it to any repo and you get four specialised agents in the VS Code Copilot Chat dropdown: **Discovery**, **Planner**, **Build**, and **Review**.
 
 ---
 
-## Overview
+## Add to a New Project (One Command)
 
-The system enforces a four-stage workflow. Each stage is handled by a dedicated agent and produces a specific, verifiable artefact.
+**Windows (PowerShell)**
+```powershell
+# Run from the root of your new repo (after git init)
+irm https://raw.githubusercontent.com/rhodes911/copilot-dev-agents/master/bootstrap.ps1 | iex
+```
+
+**macOS / Linux**
+```bash
+# Run from the root of your new repo (after git init)
+bash <(curl -fsSL https://raw.githubusercontent.com/rhodes911/copilot-dev-agents/master/bootstrap.sh)
+```
+
+That's it. The bootstrap script:
+1. Adds this repo as a git submodule at `.copilot-dev-agents/`
+2. Runs the sync to copy agent files into `.github/agents/`, `.github/instructions/`, and `docs/templates/`
+3. Makes an initial commit so everything is tracked
+
+Then open **Copilot Chat** in VS Code, pick an agent from the dropdown, and start.
+
+---
+
+## Update an Existing Project
+
+When this repo publishes changes, pull them into your project:
+
+**Windows**
+```powershell
+git submodule update --remote .copilot-dev-agents
+.\.copilot-dev-agents\sync-agents.ps1
+git add .copilot-dev-agents .github/agents .github/instructions docs/templates
+git commit -m "chore: update copilot-dev-agents"
+```
+
+**macOS / Linux**
+```bash
+git submodule update --remote .copilot-dev-agents
+bash .copilot-dev-agents/sync-agents.sh
+git add .copilot-dev-agents .github/agents .github/instructions docs/templates
+git commit -m "chore: update copilot-dev-agents"
+```
+
+You choose when to update — your project pins a specific commit of the agent system and only moves forward when you explicitly pull.
+
+---
+
+## How It Works
+
+### The four agents
+
+| Agent | Role | Output |
+|-------|------|--------|
+| **Discovery** | Scope the request, create epic + ticket, investigate constraints | `TICKET-STATUS.md` |
+| **Planner** | Produce a detailed architecture plan — no code | `DEV-PLAN-{N}.md` |
+| **Build** | Implement + test in one TDD pass | Code + passing tests |
+| **Review** | Code review, UAT evidence, sign-off or issue list back to Build | Closed ticket or `REVIEW-{N}.md` |
+
+### The workflow
 
 ```
 User Request
      ↓
 [Discovery] → Create epic + branch → EPIC-STATUS.md
      ↓
-[Discovery] → Scope + investigate → TICKET-STATUS.md
+[Discovery] → Scope + investigate  → TICKET-STATUS.md
      ↓
-[Planner]   → Architecture plan  → DEV-PLAN-{N}.md
+[Planner]   → Architecture plan   → DEV-PLAN-{N}.md
      ↓
-[Build]     → Code + tests (TDD) → passing test suite
+[Build]     → Code + tests (TDD)  → passing test suite
      ↓
-[Review]    → Verify + sign off  → closed ticket / REVIEW-{N}.md back to Build
+[Review]    → Verify + sign off   → closed ticket or back to Build
      ↓ (final ticket in epic)
-[Review]    → Epic story + PR    → epic/EPIC-{N} → main
+[Review]    → Epic story + PR     → epic/EPIC-{N} → main
 ```
 
----
-
-## Quick Start
-
-### Requirements
-
-- VS Code with the **GitHub Copilot** extension (Agent Mode enabled)
-- Git
-
-### 1. Add as a submodule (recommended)
-
-Adding as a submodule means your repository tracks a specific commit of the agent system and can pull updates whenever you choose.
-
-```bash
-# From the root of your project
-git submodule add https://github.com/rhodes911/copilot-dev-agents .copilot-dev-agents
-git submodule update --init
-```
-
-### 2. Run the sync script
-
-The sync script copies agent files, instruction files, and templates into the correct locations. Your `copilot-instructions.md` is never modified.
-
-```powershell
-# Windows (PowerShell)
-.\.copilot-dev-agents\sync-agents.ps1
-```
-
-```bash
-# macOS / Linux
-bash .copilot-dev-agents/sync-agents.sh
-```
-
-What the script does:
-- Copies `.github/agents/*.agent.md` → your repo's `.github/agents/`
-- Copies `.github/instructions/*.instructions.md` → your `.github/instructions/`
-  - Includes `agent-system.instructions.md` (`applyTo: "**"`) — this is how the global agent rules reach Copilot without touching your `copilot-instructions.md`
-- Copies `docs/templates/` → your `docs/templates/` (always latest)
-- Creates `docs/epics/INDEX.md` and `docs/tickets/INDEX.md` if absent
-```bash
-git add .github/agents .github/instructions .github/copilot-instructions.md \
-        docs/templates docs/epics/INDEX.md docs/tickets/INDEX.md \
-        .gitmodules .copilot-dev-agents
-git commit -m "chore: add copilot-dev-agents submodule and sync files"
-```
-
-### 4. Use the agents
-
-1. Open **Copilot Chat** in VS Code
-2. Click the **Agent** dropdown (or type `@` in the chat input)
-3. Select the agent for the current stage
-4. For Discovery: describe your feature or paste a requirement
-5. For all other agents: include the ticket number (e.g. `ticket=TICKET-00001`)
-
-> Tip: Attach the active ticket folder (`docs/tickets/TICKET-XXXXX/`) to the chat context before invoking Planner, Build, or Review.
-
----
-
-## Updating to a Newer Version
-
-When this repo publishes updates, pull them into your project:
-
-```bash
-# Pull the latest agent system
-git submodule update --remote .copilot-dev-agents
-
-# Re-run the sync to apply changes to your .github/ and docs/
-.\.copilot-dev-agents\sync-agents.ps1   # Windows
-# or
-bash .copilot-dev-agents/sync-agents.sh # macOS / Linux
-
-# Commit the update
-git add .copilot-dev-agents .github docs
-git commit -m "chore: update copilot-dev-agents to latest"
-```
-
-The global agent rules live in `agent-system.instructions.md` with `applyTo: "**"` — your own `copilot-instructions.md` is never touched.
-
----
-
-## Development Workflow
-
-### Agents
-
-| Agent | Triggered When | Input | Output |
-|-------|---------------|-------|--------|
-| **Discovery** | New request arrives | Requirement description | `TICKET-STATUS.md`, epic branch |
-| **Planner** | Discovery hands off | Ticket number | `DEV-PLAN-{N}.md` |
-| **Build** | Planner hands off | Ticket number | Code + passing tests |
-| **Review** | Build hands off | Ticket number | Sign-off or numbered issue list |
-
-### Epic Branch Policy
+### Epic branch policy
 
 - One branch per epic: `epic/EPIC-{NUMBER}`
 - Never commit directly to `main`
 - Merge via PR after Review Agent sign-off on the final ticket
 
-### Ticket Statuses
+---
 
-| Status | Meaning |
-|--------|---------|
-| `pending` | Created; not yet started |
-| `in-progress` | Currently being worked |
-| `review` | Build complete; awaiting Review |
-| `done` | Review signed off |
+## What the Sync Installs
+
+| Path in your repo | Content | Sync behaviour |
+|-------------------|---------|----------------|
+| `.github/agents/*.agent.md` | Agent definitions | Always overwritten (canonical upstream) |
+| `.github/instructions/agent-system.instructions.md` | Global agent rules (`applyTo: "**"`) | Always overwritten |
+| `.github/instructions/documentation.instructions.md` | Doc quality rules | Always overwritten |
+| `.github/instructions/testing.instructions.md` | Test conventions | Always overwritten |
+| `docs/templates/` | EPIC, TICKET, DEV-PLAN templates | Always overwritten |
+| `docs/epics/INDEX.md` | Master epic list | Created once — you own the content |
+| `docs/tickets/INDEX.md` | Master ticket list | Created once — you own the content |
+
+Your `copilot-instructions.md` is **never touched**. The global agent rules reach Copilot via `agent-system.instructions.md` with `applyTo: "**"` — no injection into your files.
 
 ---
 
-## File Structure
+## File Structure (after sync)
 
 ```
+.copilot-dev-agents/     <- submodule (do not edit — pull updates from here)
 .github/
-  agents/           # Agent definition files (chatagent format)
-  instructions/     # Scoped instructions applied automatically by Copilot
-  copilot-instructions.md  # Global rules applied to all agents
+  agents/
+    discovery.agent.md
+    planner.agent.md
+    build.agent.md
+    review.agent.md
+  instructions/
+    agent-system.instructions.md   <- global rules, applied to all files
+    documentation.instructions.md
+    testing.instructions.md
+  copilot-instructions.md          <- your own project-specific instructions
 docs/
   epics/
-    INDEX.md        # Master list of all epics
+    INDEX.md
     EPIC-{N}/
       EPIC-STATUS.md
-      EPIC-STORY-{N}.md   # Generated by Review on final ticket
+      EPIC-STORY-{N}.md   <- generated by Review on final ticket
   tickets/
-    INDEX.md        # Master list of all tickets
+    INDEX.md
     TICKET-{N}/
       TICKET-STATUS.md
       DEV-PLAN-{N}.md
-      REVIEW-{N}.md       # Created by Review if issues found
-  templates/        # Copy-paste starting points for new docs
+      REVIEW-{N}.md       <- created by Review if issues found
+  templates/
 ```
-
----
-
-## Configuration
-
-No configuration file is required. The system works out of the box for any project. If your project has a config schema, API contracts, or environment variables, the agents will read and reference those actual files — they never guess.
-
-Add a `.env.example` to your repository to enable env var tracking across agents.
 
 ---
 
 ## Customising for Your Project
 
-The sync script always overwrites the agent files and templates with the canonical upstream versions. Project-specific customisations belong in two places that the sync script **never touches**:
+The sync always overwrites agent files and templates with the upstream canonical versions. Put your project-specific rules in places the sync never touches:
 
-| Customisation | Where to put it |
-|---------------|-----------------|
-| Project-specific global rules | Your own `copilot-instructions.md` — untouched by sync |
-| Extra investigation scope for Discovery | Add a `project-discovery.instructions.md` in `.github/instructions/` |
-| Additional review checklist items | Add a `project-review.instructions.md` in `.github/instructions/` |
-| Testing conventions specific to your stack | Add a `project-testing.instructions.md` in `.github/instructions/` |
+| What | Where |
+|------|-------|
+| Project-specific global rules | Your `copilot-instructions.md` |
+| Extra Discovery investigation scope | `.github/instructions/project-discovery.instructions.md` |
+| Extra Review checklist items | `.github/instructions/project-review.instructions.md` |
+| Project-specific test conventions | `.github/instructions/project-testing.instructions.md` |
 
-The scoped instruction files in `.github/instructions/` are additive — Copilot merges them all. Add your own files alongside the synced ones without worrying about conflicts.
+Instruction files are additive — Copilot merges all of them. Add your own files alongside the synced ones without any conflict.
 
-If you need to change the upstream agent behaviour permanently, open a PR against this repo so all consumers benefit.
+If you need to change the upstream agent behaviour for everyone, open a PR against this repo.
 
 ---
 
 ## Troubleshooting
 
 **Agent not appearing in the dropdown**
-- Ensure the sync has been run and the files exist at `.github/agents/` in your repo root
+- Confirm the sync has run and `.github/agents/*.agent.md` files exist at your repo root
 - Ensure each file has a valid `chatagent` front-matter block with a `name` field
 - Reload VS Code
 
 **Agent ignores my ticket context**
-- Attach the ticket folder to the chat before sending
-- Include the ticket number explicitly in your message (e.g. `ticket=TICKET-00001`)
+- Attach the relevant ticket folder (`docs/tickets/TICKET-XXXXX/`) to the Copilot Chat context
+- Include the ticket number explicitly: `ticket=TICKET-00001`
 
-**Planner or Build is making assumptions**
-- This is a misuse signal. Remind the agent: "Read the file before answering."
-- Ensure `agent-system.instructions.md` is present in `.github/instructions/` — re-run the sync script if not.
+**Agent is guessing instead of reading files**
+- Remind it: "Read the file before answering."
+- Ensure `agent-system.instructions.md` is present in `.github/instructions/` — re-run the sync if not
 
-**Sync script fails or produces unexpected output**
+**Bootstrap or sync script fails**
+- Confirm you are inside a git repo (`git init` if not)
 - Confirm the submodule is initialised: `git submodule update --init`
-- Run with `bash -x .copilot-dev-agents/sync-agents.sh` (shell) for debug output
+- macOS/Linux debug: `bash -x .copilot-dev-agents/sync-agents.sh`
