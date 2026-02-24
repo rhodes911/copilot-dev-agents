@@ -23,7 +23,7 @@ Write-Host "  Agents src : $AgentsRepo"
 Write-Host ""
 
 $submodulePath = ".copilot-dev-agents"
-$submoduleGit  = Join-Path $repoRoot $submodulePath ".git"
+$submoduleGit  = Join-Path (Join-Path $repoRoot $submodulePath) ".git"
 
 if (Test-Path $submoduleGit) {
     Write-Host "Submodule already present - pulling latest..."
@@ -35,7 +35,7 @@ if (Test-Path $submoduleGit) {
 }
 
 Write-Host ""
-$syncScript = Join-Path $repoRoot $submodulePath "sync-agents.ps1"
+$syncScript = Join-Path (Join-Path $repoRoot $submodulePath) "sync-agents.ps1"
 
 if (-not (Test-Path $syncScript)) {
     Write-Host "Error: sync script not found at $syncScript"
