@@ -26,7 +26,6 @@ param(
     [string]$TargetRepo = (Split-Path -Parent $PSScriptRoot)
 )
 
-Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $Source = $PSScriptRoot
