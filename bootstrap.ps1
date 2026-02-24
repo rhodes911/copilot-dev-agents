@@ -55,9 +55,11 @@ if (-not $SkipCommit) {
         "docs/tickets/INDEX.md"
     )
 
+    $ErrorActionPreference = "Continue"
     foreach ($item in $toStage) {
         git add $item 2>&1 | Out-Null
     }
+    $ErrorActionPreference = "Stop"
 
     $staged = (git diff --cached --name-only 2>&1) -join ""
     if ($staged) {
