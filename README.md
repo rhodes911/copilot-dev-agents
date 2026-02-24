@@ -47,7 +47,7 @@ git submodule update --init
 
 ### 2. Run the sync script
 
-The sync script copies the agent files into the correct locations in your repo and injects the agent-system rules into your `copilot-instructions.md`.
+The sync script copies agent files, instruction files, and templates into the correct locations. Your `copilot-instructions.md` is never modified.
 
 ```powershell
 # Windows (PowerShell)
@@ -62,12 +62,9 @@ bash .copilot-dev-agents/sync-agents.sh
 What the script does:
 - Copies `.github/agents/*.agent.md` → your repo's `.github/agents/`
 - Copies `.github/instructions/*.instructions.md` → your `.github/instructions/`
+  - Includes `agent-system.instructions.md` (`applyTo: "**"`) — this is how the global agent rules reach Copilot without touching your `copilot-instructions.md`
 - Copies `docs/templates/` → your `docs/templates/` (always latest)
 - Creates `docs/epics/INDEX.md` and `docs/tickets/INDEX.md` if absent
-- Injects/updates an `<!-- AGENT-SYSTEM:START -->` … `<!-- AGENT-SYSTEM:END -->` block in your `.github/copilot-instructions.md`
-
-### 3. Commit the synced files
-
 ```bash
 git add .github/agents .github/instructions .github/copilot-instructions.md \
         docs/templates docs/epics/INDEX.md docs/tickets/INDEX.md \
@@ -105,7 +102,7 @@ git add .copilot-dev-agents .github docs
 git commit -m "chore: update copilot-dev-agents to latest"
 ```
 
-The `<!-- AGENT-SYSTEM:START -->` / `<!-- AGENT-SYSTEM:END -->` markers in your `copilot-instructions.md` ensure the update is surgical — only the agent-system block is replaced, leaving your own project-specific instructions untouched.
+The global agent rules live in `agent-system.instructions.md` with `applyTo: "**"` — your own `copilot-instructions.md` is never touched.
 
 ---
 
@@ -175,7 +172,7 @@ The sync script always overwrites the agent files and templates with the canonic
 
 | Customisation | Where to put it |
 |---------------|-----------------|
-| Project-specific global rules | In `copilot-instructions.md`, **outside** the `AGENT-SYSTEM` markers |
+| Project-specific global rules | Your own `copilot-instructions.md` — untouched by sync |
 | Extra investigation scope for Discovery | Add a `project-discovery.instructions.md` in `.github/instructions/` |
 | Additional review checklist items | Add a `project-review.instructions.md` in `.github/instructions/` |
 | Testing conventions specific to your stack | Add a `project-testing.instructions.md` in `.github/instructions/` |
@@ -199,9 +196,8 @@ If you need to change the upstream agent behaviour permanently, open a PR agains
 
 **Planner or Build is making assumptions**
 - This is a misuse signal. Remind the agent: "Read the file before answering."
-- Ensure the `<!-- AGENT-SYSTEM:START -->` block is present in `.github/copilot-instructions.md` — re-run the sync script if not.
+- Ensure `agent-system.instructions.md` is present in `.github/instructions/` — re-run the sync script if not.
 
 **Sync script fails or produces unexpected output**
 - Confirm the submodule is initialised: `git submodule update --init`
-- On macOS/Linux, ensure `perl` is available (used for multi-line replacement)
-- Run with `-Verbose` (PowerShell) or `bash -x` (shell) for debug output
+- Run with `bash -x .copilot-dev-agents/sync-agents.sh` (shell) for debug output
